@@ -1,0 +1,235 @@
+# RCIG Configuration File
+# This is an example configuration file for the Real Time Code Intelligence Gateway
+
+# Server configuration
+server:
+  # Address and port to listen on
+  listen_addr: ":8080"
+  
+  # Target URL to proxy requests to
+  target_url: "http://localhost:9000"
+  
+  # Server timeouts
+  timeouts:
+    read: "30s"
+    write: "30s"
+    idle: "120s"
+
+# Metrics configuration
+metrics:
+  # Enable metrics collection
+  enabled: true
+  
+  # History size for circular buffer (number of samples to keep per endpoint)
+  history_size: 1000
+  
+  # Enable Prometheus metrics endpoint
+  prometheus:
+    enabled: true
+    path: "/metrics"
+
+# Analyzer configuration for drift detection
+analyzer:
+  # How often to run drift analysis
+  tick_interval: "5s"
+  
+  # Size of the older window for comparison
+  older_window_size: 80
+  
+  # Size of the recent window for comparison
+  recent_window_size: 20
+  
+  # Drift threshold (percentage increase that triggers alert)
+  # 0.40 means 40% increase
+  drift_threshold: 0.40
+
+# Alert configuration
+alerts:
+  # Console alert sink (logs to stdout)
+  - type: "console"
+    enabled: true
+  
+  # Slack webhook alert sink
+  - type: "slack"
+    enabled: false
+    webhook_url: "${SLACK_WEBHOOK_URL}"
+    channel: "#alerts"
+    username: "RCIG Alert Bot"
+  
+  # Email (SMTP) alert sink
+  - type: "email"
+    enabled: false
+    smtp_host: "smtp.gmail.com"
+    smtp_port: 587
+    username: "${SMTP_USERNAME}"
+    password: "${SMTP_PASSWORD}"
+    from: "alerts@example.com"
+    to:
+      - "admin@example.com"
+      - "ops@example.com"
+    subject_prefix: "[RCIG Alert]"
+  
+  # Generic webhook alert sink
+  - type: "webhook"
+    enabled: false
+    url: "${WEBHOOK_URL}"
+    method: "POST"
+    headers:
+      Authorization: "Bearer ${WEBHOOK_TOKEN}"
+      Content-Type: "application/json"
+    # Optional: custom template for payload
+    # template: |
+    #   {
+    #     "alert_type": "{{ .Type }}",
+    #     "endpoint": "{{ .Method }} {{ .Path }}",
+    #     "increase": {{ .PercentageIncrease }}
+    #   }
+
+# Authentication configuration
+auth:
+  # Enable authentication for admin endpoints (/rcig/*)
+  enabled: false
+  
+  # API key authentication
+  api_keys:
+    - key: "${API_KEY_1}"
+      name: "admin"
+      permissions:
+        - "read"
+        - "write"
+    
+    - key: "${API_KEY_2}"
+      name: "readonly"
+      permissions:
+        - "read"
+  
+  # Basic authentication (alternative to API keys)
+  basic_auth:
+    enabled: false
+    username: "${BASIC_AUTH_USER}"
+    password: "${BASIC_AUTH_PASS}"
+
+# Logging configuration
+logging:
+  # Log level: debug, info, warn, error
+  level: "info"
+  
+  # Log format: json, console
+  format: "json"
+  
+  # Log output: stdout, stderr, or file path
+  output: "stdout"
+
+# Advanced proxy features
+proxy:
+  # Rate limiting configuration
+  rate_limit:
+    enabled: false
+    # Requests per second per endpoint
+    requests_per_second: 100
+    # Burst size
+    burst: 200
+  
+  # Circuit breaker configuration
+  circuit_breaker:
+    enabled: false
+    # Max consecutive failures before opening circuit
+    max_failures: 5
+    # Timeout before attempting to close circuit
+    timeout: "30s"
+  
+  # Retry configuration
+  retry:
+    enabled: false
+    # Maximum number of retries
+    max_attempts: 3
+    # Initial backoff duration
+    initial_backoff: "100ms"
+    # Maximum backoff duration
+    max_backoff: "10s"
+  
+  # Request/response body inspection
+  body_inspection:
+    enabled: false
+    # Maximum body size to inspect (in bytes)
+    max_size: 1048576  # 1MB
+  
+  # Custom header manipulation
+  headers:
+    # Headers to add to requests
+    add:
+      X-Forwarded-By: "RCIG"
+    
+    # Headers to remove from requests
+    remove: []
+    
+    # Headers to modify
+    modify: {}
+  
+  # Response caching
+  cache:
+    enabled: false
+    # Default TTL for cached responses
+    default_ttl: "5m"
+    # Maximum cache size in MB
+    max_size_mb: 100
+
+# Security configuration
+security:
+  # TLS/HTTPS configuration
+  tls:
+    enabled: false
+    cert_file: "/path/to/cert.pem"
+    key_file: "/path/to/key.pem"
+    # Auto-redirect HTTP to HTTPS
+    redirect_http: true
+  
+  # Security headers
+  headers:
+    enabled: true
+    # HTTP Strict Transport Security
+    hsts: "max-age=31536000; includeSubDomains"
+    # Content Security Policy
+    csp: "default-src 'self'"
+    # X-Frame-Options
+    x_frame_options: "DENY"
+    # X-Content-Type-Options
+    x_content_type_options: "nosniff"
+  
+  # CORS configuration
+  cors:
+    enabled: false
+    allowed_origins:
+      - "*"
+    allowed_methods:
+      - "GET"
+      - "POST"
+      - "PUT"
+      - "DELETE"
+    allowed_headers:
+      - "Content-Type"
+      - "Authorization"
+    allow_credentials: false
+  
+  # Request size limits
+  limits:
+    # Maximum request body size in bytes
+    max_body_size: 10485760  # 10MB
+    # Maximum header size in bytes
+    max_header_size: 1048576  # 1MB
+
+# Observability configuration
+observability:
+  # OpenTelemetry tracing
+  tracing:
+    enabled: false
+    # OTLP exporter endpoint
+    endpoint: "localhost:4317"
+    # Service name
+    service_name: "rcig"
+    # Sample rate (0.0 to 1.0)
+    sample_rate: 1.0
+  
+  # Profiling endpoints (/debug/pprof/*)
+  profiling:
+    enabled: false

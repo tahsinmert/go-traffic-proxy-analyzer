@@ -1,0 +1,153 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+      
+      - name: Get version
+        id: version
+        run: |
+          echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          echo "COMMIT=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "BUILD_TIME=$(date -u '+%Y-%m-%d_%H:%M:%S')" >> $GITHUB_OUTPUT
+      
+      - name: Build binaries
+        run: |
+          mkdir -p dist
+          
+          # Build for multiple platforms
+          for GOOS in linux darwin windows; do
+            for GOARCH in amd64 arm64; do
+              # Skip windows/arm64
+              if [ "$GOOS" = "windows" ] && [ "$GOARCH" = "arm64" ]; then
+                continue
+              fi
+              
+              BINARY_NAME=rcig-${GOOS}-${GOARCH}
+              if [ "$GOOS" = "windows" ]; then
+                BINARY_NAME="${BINARY_NAME}.exe"
+              fi
+              
+              echo "Building $BINARY_NAME..."
+              GOOS=$GOOS GOARCH=$GOARCH go build \
+                -ldflags="-w -s -X main.Version=${{ steps.version.outputs.VERSION }} -X main.Commit=${{ steps.version.outputs.COMMIT }} -X main.BuildTime=${{ steps.version.outputs.BUILD_TIME }}" \
+                -o dist/${BINARY_NAME} \
+                ./cmd/proxy
+            done
+          done
+      
+      - name: Create checksums
+        run: |
+          cd dist
+          sha256sum * > checksums.txt
+          cd ..
+      
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Get the previous tag
+          PREVIOUS_TAG=$(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1) 2>/dev/null || echo "")
+          
+          if [ -n "$PREVIOUS_TAG" ]; then
+            echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+            git log ${PREVIOUS_TAG}..HEAD --pretty=format:"* %s (%h)" >> $GITHUB_OUTPUT
+            echo "" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "CHANGELOG=Initial release" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body: |
+            ## Release ${{ steps.version.outputs.VERSION }}
+            
+            ### Changes
+            ${{ steps.changelog.outputs.CHANGELOG }}
+            
+            ### Installation
+            
+            Download the appropriate binary for your platform from the assets below.
+            
+            **Linux AMD64:**
+            ```bash
+            wget https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.VERSION }}/rcig-linux-amd64
+            chmod +x rcig-linux-amd64
+            sudo mv rcig-linux-amd64 /usr/local/bin/rcig
+            ```
+            
+            **macOS AMD64:**
+            ```bash
+            wget https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.VERSION }}/rcig-darwin-amd64
+            chmod +x rcig-darwin-amd64
+            sudo mv rcig-darwin-amd64 /usr/local/bin/rcig
+            ```
+            
+            **Checksums:**
+            Verify your download using the checksums.txt file.
+          files: |
+            dist/*
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
+  docker:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Log in to Docker Hub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKER_USERNAME }}/rcig
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=raw,value=latest
+      
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

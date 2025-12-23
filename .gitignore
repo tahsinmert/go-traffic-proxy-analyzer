@@ -4,12 +4,14 @@
 *.dll
 *.so
 *.dylib
+proxy
+rcig
 
 # Go build artifacts
 *.test
 *.out
 
-# Output of `go build`, `go test`, or similar
+# Output directories
 bin/
 build/
 dist/
@@ -28,6 +30,23 @@ Thumbs.db
 
 # Coverage / profiling
 coverage.out
+coverage.html
 profile.out
+*.prof
+
+# Security reports
+gosec-report.json
+
+# Dependency directories
+vendor/
+
+# Environment files
+.env
+.env.local
+
+# Temporary files
+tmp/
+temp/
 
 
+proxy

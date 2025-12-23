@@ -1,0 +1,43 @@
+# Docker ignore file
+.git
+.gitignore
+.github
+.vscode
+.idea
+
+# Documentation
+*.md
+docs/
+LICENSE
+CODE_OF_CONDUCT.md
+CONTRIBUTING.md
+SECURITY.md
+
+# Test files
+*_test.go
+testdata/
+
+# Build artifacts
+bin/
+build/
+dist/
+*.test
+*.out
+coverage.out
+coverage.html
+*.prof
+gosec-report.json
+
+# Dependencies (will be downloaded in build)
+vendor/
+
+# Environment files
+.env
+.env.local
+
+# Temporary files
+tmp/
+temp/
+
+# CI/CD
+.github/

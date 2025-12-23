@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  # RCIG Proxy
+  rcig:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rcig-proxy
+    ports:
+      - "8080:8080"
+    environment:
+      - RCIG_TARGET_URL=http://backend:9000
+      - RCIG_LISTEN_ADDR=:8080
+    depends_on:
+      - backend
+    networks:
+      - rcig-network
+    restart: unless-stopped
+
+  # Example backend service
+  backend:
+    image: nginx:alpine
+    container_name: rcig-backend
+    ports:
+      - "9000:80"
+    networks:
+      - rcig-network
+    volumes:
+      - ./examples/backend-config:/etc/nginx/conf.d:ro
+    restart: unless-stopped
+
+  # Prometheus (optional for metrics collection)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: rcig-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - rcig-network
+    restart: unless-stopped
+    profiles:
+      - observability
+
+  # Grafana (optional for visualization)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: rcig-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./config/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./config/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    networks:
+      - rcig-network
+    restart: unless-stopped
+    profiles:
+      - observability
+
+networks:
+  rcig-network:
+    driver: bridge
+
+volumes:
+  prometheus-data:
+  grafana-data:
