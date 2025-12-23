@@ -1,0 +1,24 @@
+# RCIG Default Configuration
+# Minimal configuration to get started
+
+server:
+  listen_addr: ":8080"
+  target_url: "http://localhost:9000"
+
+metrics:
+  enabled: true
+  history_size: 100
+
+analyzer:
+  tick_interval: "5s"
+  older_window_size: 80
+  recent_window_size: 20
+  drift_threshold: 0.40
+
+alerts:
+  - type: "console"
+    enabled: true
+
+logging:
+  level: "info"
+  format: "json"

@@ -1,0 +1,23 @@
+# Code owners for RCIG project
+# These owners will be automatically requested for review when someone opens a pull request.
+
+# Default owners for everything in the repo
+*       @tahsinmert
+
+# Go code
+*.go    @tahsinmert
+
+# Configuration files
+*.yml   @tahsinmert
+*.yaml  @tahsinmert
+
+# Documentation
+*.md    @tahsinmert
+/docs/  @tahsinmert
+
+# CI/CD
+/.github/  @tahsinmert
+
+# Docker
+Dockerfile      @tahsinmert
+docker-compose.yml  @tahsinmert

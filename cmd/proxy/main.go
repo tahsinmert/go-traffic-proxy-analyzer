@@ -32,7 +32,7 @@ func loadConfig() config {
 
 	target := os.Getenv("RCIG_TARGET_URL")
 	if target == "" {
-		log.Fatal("RCIG_TARGET_URL environment değişkeni zorunludur (örn: http://localhost:9000)")
+		log.Fatal("RCIG_TARGET_URL environment variable is required (e.g.: http://localhost:9000)")
 	}
 
 	return config{
@@ -46,7 +46,7 @@ func main() {
 
 	targetURL, err := url.Parse(cfg.TargetURL)
 	if err != nil {
-		log.Fatalf("hedef URL parse edilemedi: %v", err)
+		log.Fatalf("failed to parse target URL: %v", err)
 	}
 
 	rp := httputil.NewSingleHostReverseProxy(targetURL)
@@ -81,10 +81,10 @@ func main() {
 		IdleTimeout:  60 * time.Second,
 	}
 
-	log.Printf("RCIG proxy %s adresinde dinliyor, hedef: %s", cfg.ListenAddr, cfg.TargetURL)
+	log.Printf("RCIG proxy listening on %s, target: %s", cfg.ListenAddr, cfg.TargetURL)
 	go func() {
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("sunucu hatası: %v", err)
+			log.Fatalf("server error: %v", err)
 		}
 	}()
 
@@ -96,5 +96,3 @@ func main() {
 	defer cancel()
 	_ = server.Shutdown(ctx)
 }
-
-

@@ -21,7 +21,7 @@ type endpointMetrics struct {
 }
 
 type payload struct {
-	GeneratedAt time.Time        `json:"generated_at"`
+	GeneratedAt time.Time         `json:"generated_at"`
 	Endpoints   []endpointMetrics `json:"endpoints"`
 }
 
@@ -67,6 +67,3 @@ func (h *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	enc := json.NewEncoder(w)
 	_ = enc.Encode(resp)
 }
-
-
-
