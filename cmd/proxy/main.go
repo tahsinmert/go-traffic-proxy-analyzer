@@ -96,5 +96,3 @@ func main() {
 	defer cancel()
 	_ = server.Shutdown(ctx)
 }
-
-

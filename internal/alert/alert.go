@@ -8,13 +8,13 @@ import (
 )
 
 type DriftAlert struct {
-	Type              string  `json:"type"`
-	Method            string  `json:"method"`
-	Path              string  `json:"path"`
+	Type               string  `json:"type"`
+	Method             string  `json:"method"`
+	Path               string  `json:"path"`
 	PercentageIncrease float64 `json:"percentage_increase"`
-	OlderAvgMillis    float64 `json:"older_avg_ms"`
-	RecentAvgMillis   float64 `json:"recent_avg_ms"`
-	Timestamp         string  `json:"timestamp"`
+	OlderAvgMillis     float64 `json:"older_avg_ms"`
+	RecentAvgMillis    float64 `json:"recent_avg_ms"`
+	Timestamp          string  `json:"timestamp"`
 }
 
 type Sink interface {
@@ -22,7 +22,7 @@ type Sink interface {
 }
 
 type ConsoleSink struct {
-	mu         sync.Mutex
+	mu          sync.Mutex
 	activeDrift map[string]bool
 }
 
@@ -69,5 +69,3 @@ func (c *ConsoleSink) ClearDrift(method, path string) {
 	defer c.mu.Unlock()
 	delete(c.activeDrift, key)
 }
-
-

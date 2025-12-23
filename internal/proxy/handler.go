@@ -39,5 +39,3 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	latency := time.Since(start)
 	h.registry.Record(r.Method, r.URL.Path, latency, rec.status)
 }
-
-

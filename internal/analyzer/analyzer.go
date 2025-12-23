@@ -89,5 +89,3 @@ func averageDuration(vs []time.Duration) time.Duration {
 func roundToTwoDecimals(v float64) float64 {
 	return math.Round(v*100) / 100
 }
-
-

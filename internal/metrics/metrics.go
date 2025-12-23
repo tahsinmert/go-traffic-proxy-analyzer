@@ -117,5 +117,3 @@ func (r *Registry) Summaries() []EndpointSummary {
 	}
 	return out
 }
-
-
